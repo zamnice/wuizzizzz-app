@@ -1,495 +1,1004 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wayground Mini - MerakitZAM</title>
-    <!-- CDN Libraries -->
+    <title>Wuizzizzz - Quiz Cepat & Seru untuk Latihan Olimpiade</title>
+    <meta name="description" content="Platform quiz gamifikasi untuk persiapan olimpiade sains IPS SMP. Dapatkan poin, kumpulkan badge, dan naikkan level kemampuanmu!">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="https://files.catbox.moe/wm29ez.ico">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        primary: '#FF6B00',
-                        secondary: '#FFE8B0',
-                    },
                     fontFamily: {
-                        sans: ['Nunito', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                        playful: ['Comic Neue', 'cursive'],
                     },
+                    colors: {
+                        brand: {
+                            primary: '#FF6B00',
+                            light: '#FFE8B0',
+                            dark: '#CC5600',
+                            text: '#6F4E37',
+                            bg: '#F5EFE6'
+                        },
+                        difficulty: {
+                            easy: '#22C55E',
+                            medium: '#F59E0B',
+                            hard: '#EF4444',
+                            expert: '#8B5CF6'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-fast': 'bounce 0.5s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    }
                 }
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Google Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
     <style>
-        body {
-            font-family: 'Nunito', sans-serif;
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        .logo-z {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #FF6B00;
-            color: white;
-            font-weight: bold;
-            border-radius: 8px;
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B00, #F4C425);
+            transition: all 0.3s ease;
         }
-        .quiz-option:hover {
-            transform: translateY(-2px);
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(255, 107, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #4A90E2, #10B981);
+        }
+        
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px rgba(74, 144, 226, 0.3);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #FF6B00;
+            animation: confetti-fall 2s ease-out forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(300px) rotate(360deg); opacity: 0; }
+        }
+        
+        .quiz-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .blur-card {
+            filter: blur(4px);
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(255,235,205,1) 0%, rgba(255,214,153,1) 100%);
+        }
+        
+        .token-badge {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .progress-bar {
-            transition: width 0.3s ease;
+        
+        .correct-answer {
+            animation: correct-pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes correct-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        .incorrect-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
     </style>
 </head>
-<body class="bg-secondary min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 bg-white shadow-md">
-        <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <div class="logo-z">Z</div>
-                <span class="text-xl font-bold text-primary">MerakitZAM</span>
-            </div>
-            <div>
-                <button id="loginButton" class="text-primary hover:text-orange-700 font-medium">Login</button>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main class="flex-grow container mx-auto px-4 py-8">
-        <!-- Lobby Screen (Default View) -->
-        <div id="lobbyScreen" data-aos="fade-up">
-            <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8 text-center">
-                <h1 class="text-3xl font-bold text-primary mb-6">Wayground Mini - MerakitZAM</h1>
-                <p class="text-gray-600 mb-8">Selamat datang di platform pembelajaran interaktif. Silakan pilih menu di bawah untuk memulai.</p>
-                
-                <div class="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 justify-center mb-8">
-                    <button id="startQuizBtn" class="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-orange-700 transition duration-300">
-                        Mulai Quiz
-                    </button>
-                    <button class="px-6 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-orange-50 transition duration-300">
-                        Latihan
-                    </button>
-                </div>
-                
-                <div class="mb-4">
-                    <p class="text-sm text-gray-500 mb-1">Progress Pembelajaran</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="progressBar" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+<body class="font-poppins bg-brand-bg text-brand-text">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">W</span>
+                        </div>
+                        <span class="ml-2 text-xl font-bold text-brand-primary hidden sm:block">Wuizzizzz</span>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Quiz Screen (Hidden by default) -->
-        <div id="quizScreen" class="hidden" data-aos="fade-up">
-            <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-primary">Quiz</h2>
-                    <span id="questionCounter" class="text-gray-500">1/10</span>
-                </div>
-                
-                <div class="mb-4">
-                    <p class="text-sm text-gray-500 mb-1">Progress</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="quizProgressBar" class="bg-primary h-2.5 rounded-full" style="width: 10%"></div>
+                <div class="flex items-center space-x-4">
+                    <div id="tokenDisplay" class="hidden bg-brand-light px-3 py-1 rounded-full text-sm font-semibold items-center token-badge">
+                        <span class="material-icons text-brand-primary text-sm mr-1">bolt</span>
+                        <span id="tokenCount">0</span>
                     </div>
-                </div>
-                
-                <div id="questionContainer" class="mb-8">
-                    <p id="questionText" class="text-lg font-medium mb-6">Memuat pertanyaan...</p>
-                    <div id="optionsContainer" class="grid gap-3">
-                        <!-- Options will be inserted here by JavaScript -->
-                    </div>
-                </div>
-                
-                <div class="flex justify-between">
-                    <button id="prevQuestionBtn" class="px-4 py-2 border border-primary text-primary rounded-lg hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                        Sebelumnya
-                    </button>
-                    <button id="skipQuestionBtn" class="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100">
-                        Lewati
-                    </button>
-                    <button id="nextQuestionBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-orange-700">
-                        Selanjutnya
+                    <button id="loginBtn" class="bg-brand-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-dark transition-colors">
+                        Masuk
                     </button>
                 </div>
             </div>
         </div>
+    </nav>
 
-        <!-- Results Screen (Hidden by default) -->
-        <div id="resultsScreen" class="hidden" data-aos="fade-up">
-            <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8 text-center">
-                <h2 class="text-2xl font-bold text-primary mb-4">Hasil Quiz</h2>
-                <div class="w-32 h-32 mx-auto rounded-full bg-secondary flex items-center justify-center mb-6">
-                    <span id="scoreDisplay" class="text-4xl font-bold text-primary">0%</span>
+    <!-- Hero Section -->
+    <section class="hero-gradient">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="text-center md:text-left">
+                    <h1 class="text-4xl md:text-5xl font-bold text-brand-primary mb-4">Wuizzizzz</h1>
+                    <p class="text-xl md:text-2xl mb-6 font-medium">Quiz cepat, seru, dan berhadiah. Mulai latihanmu sekarang!</p>
+                    <p class="text-lg mb-8">Platform gamifikasi untuk persiapan olimpiade sains IPS SMP. Dapatkan poin, kumpulkan badge, dan naikkan level kemampuanmu!</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <button id="startQuizBtn" class="btn-primary text-white px-6 py-3 rounded-lg font-bold">
+                            <span class="material-icons mr-2">rocket_launch</span> Mulai Sekarang
+                        </button>
+                        <button id="viewQuizzesBtn" class="border-2 border-brand-primary text-brand-primary px-6 py-3 rounded-lg font-bold hover:bg-brand-light transition-colors">
+                            Lihat Semua Quiz
+                        </button>
+                    </div>
                 </div>
-                <p id="resultMessage" class="text-lg mb-6">Kamu menjawab <span id="correctAnswers" class="font-bold">0</span> dari <span id="totalQuestions" class="font-bold">10</span> pertanyaan dengan benar.</p>
-                
-                <div class="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 justify-center mb-8">
-                    <button id="retryQuizBtn" class="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-orange-700 transition duration-300">
-                        Coba Lagi
-                    </button>
-                    <button id="backToLobbyBtn" class="px-6 py-3 border border-primary text-primary font-medium rounded-lg hover:bg-orange-50 transition duration-300">
-                        Kembali ke Lobby
-                    </button>
+                <div class="flex justify-center">
+                    <div class="relative w-64 h-64 md:w-80 md:h-80">
+                        <div class="absolute inset-0 bg-white rounded-full shadow-lg flex items-center justify-center">
+                            <div class="w-48 h-48 md:w-60 md:h-60 bg-brand-light rounded-full flex items-center justify-center animate-float">
+                                <div class="w-32 h-32 md:w-40 md:h-40 bg-brand-primary rounded-full flex items-center justify-center">
+                                    <span class="text-white text-6xl md:text-7xl">?</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </main>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12 text-brand-primary">Kenapa Pilih Wuizzizzz?</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="feature-card bg-white p-6 rounded-xl shadow-md border border-brand-light transition-all" data-aos="fade-up">
+                    <div class="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span class="material-icons text-brand-primary text-3xl">flash_on</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-2">Quiz Kilat</h3>
+                    <p class="text-center">Latihan cepat 5-10 menit, cocok untuk waktu senggang</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-xl shadow-md border border-brand-light transition-all" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span class="material-icons text-brand-primary text-3xl">lock</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-2">Token System</h3>
+                    <p class="text-center">Ambil token gratis atau beli untuk akses quiz premium</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-xl shadow-md border border-brand-light transition-all" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span class="material-icons text-brand-primary text-3xl">face</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-2">Tanpa Email</h3>
+                    <p class="text-center">Login instan dengan username, langsung mulai quiz</p>
+                </div>
+                
+                <div class="feature-card bg-white p-6 rounded-xl shadow-md border border-brand-light transition-all" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span class="material-icons text-brand-primary text-3xl">leaderboard</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-2">Leaderboard</h3>
+                    <p class="text-center">Bandingkan skormu dengan peserta lain (Supabase-ready)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-16 bg-brand-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12 text-brand-primary">Cara Kerjanya</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md text-center" data-aos="zoom-in">
+                    <div class="w-20 h-20 bg-brand-primary rounded-full flex items-center justify-center mb-4 mx-auto text-white text-3xl font-bold">1</div>
+                    <h3 class="text-xl font-bold mb-2">Login Singkat</h3>
+                    <p>Tanpa email, cukup pilih username dan mulai</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md text-center" data-aos="zoom-in" data-aos-delay="150">
+                    <div class="w-20 h-20 bg-brand-primary rounded-full flex items-center justify-center mb-4 mx-auto text-white text-3xl font-bold">2</div>
+                    <h3 class="text-xl font-bold mb-2">Ambil Token</h3>
+                    <p>Dapatkan token gratis atau beli untuk quiz premium</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md text-center" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="w-20 h-20 bg-brand-primary rounded-full flex items-center justify-center mb-4 mx-auto text-white text-3xl font-bold">3</div>
+                    <h3 class="text-xl font-bold mb-2">Kerjakan Quiz</h3>
+                    <p>Jawab soal, kumpulkan poin, dan naikkan level</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quiz Catalog Section -->
+    <section class="py-16 bg-white" id="quizCatalog">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12 text-brand-primary">Daftar Quiz Tersedia</h2>
+            
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Quiz cards will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-16 bg-brand-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12 text-brand-primary">Apa Kata Mereka?</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md" data-aos="fade-up">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white font-bold mr-4">A</div>
+                        <div>
+                            <h3 class="font-bold">Andi</h3>
+                            <p class="text-sm text-gray-600">Siswa SMPN 1 Jakarta</p>
+                        </div>
+                    </div>
+                    <p>"Wuizzizzz membantuku memahami konsep IPS yang sulit dengan cara yang menyenangkan!"</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="150">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white font-bold mr-4">B</div>
+                        <div>
+                            <h3 class="font-bold">Budi</h3>
+                            <p class="text-sm text-gray-600">Siswa SMPN 3 Bandung</p>
+                        </div>
+                    </div>
+                    <p>"Sistem tokennya bikin ketagihan! Aku jadi semangat ngerjain quiz biar dapet token lagi."</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md" data-aos="fade-up" data-aos-delay="300">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white font-bold mr-4">S</div>
+                        <div>
+                            <h3 class="font-bold">Siti</h3>
+                            <p class="text-sm text-gray-600">Siswa SMPN 5 Surabaya</p>
+                        </div>
+                    </div>
+                    <p>"Persiapan OSN IPS jadi lebih mudah dengan quiz-quiz di Wuizzizzz. Recommended!"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 bg-brand-primary text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-6">Siap Tingkatkan Kemampuan IPS-mu?</h2>
+            <p class="text-xl mb-8">Gabung sekarang dan mulai koleksi poin serta badge!</p>
+            <button id="finalCtaBtn" class="bg-white text-brand-primary px-8 py-4 rounded-lg font-bold text-lg hover:bg-brand-light transition-colors">
+                <span class="material-icons mr-2">rocket_launch</span> Mulai Gratis
+            </button>
+        </div>
+    </section>
 
     <!-- Footer -->
-    <footer class="bg-white py-4 border-t">
-        <div class="container mx-auto px-4 text-center text-sm text-gray-500">
-            <p>Untuk login sebagai pengguna tertentu, buat file <code>users.json</code> dengan daftar username yang diizinkan.</p>
+    <footer class="bg-white py-8 border-t border-brand-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div class="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">W</span>
+                    </div>
+                    <span class="ml-2 text-xl font-bold text-brand-primary">Wuizzizzz</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-600 hover:text-brand-primary">
+                        <span class="material-icons">facebook</span>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-brand-primary">
+                        <span class="material-icons">instagram</span>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-brand-primary">
+                        <span class="material-icons">telegram</span>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-gray-600 text-sm">
+                © 2025 Wuizzizzz by MerakitZAM. All rights reserved.
+            </div>
         </div>
     </footer>
 
     <!-- Login Modal -->
-    <div id="loginModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-        <div class="relative p-4 w-full max-w-md max-h-full">
-            <div class="relative bg-white rounded-lg shadow">
-                <div class="flex items-center justify-between p-4 border-b rounded-t">
-                    <h3 class="text-xl font-semibold text-gray-900">Login</h3>
-                    <button type="button" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="loginModal">
-                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-brand-primary">Masuk ke Wuizzizzz</h3>
+                <button id="closeLoginModal" class="text-gray-500 hover:text-gray-700">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-gray-700 mb-2">Pilih Username</label>
+                    <input type="text" id="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary" placeholder="misal: zam123" required>
                 </div>
-                <div class="p-4 md:p-5">
-                    <form class="space-y-4" id="loginForm">
-                        <div>
-                            <label for="username" class="block mb-2 text-sm font-medium text-gray-900">Username</label>
-                            <input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" placeholder="nama pengguna" required>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <button type="button" id="randomUserBtn" class="text-primary text-sm font-medium hover:underline">Gunakan username acak</button>
-                        </div>
-                        <button type="submit" class="w-full text-white bg-primary hover:bg-orange-700 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Login</button>
-                    </form>
-                </div>
+                
+                <button type="submit" class="btn-primary text-white px-6 py-3 rounded-lg font-bold w-full">
+                    <span class="material-icons mr-2">login</span> Masuk Sekarang
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center text-sm text-gray-600">
+                Dengan masuk, kamu menyetujui <a href="#" class="text-brand-primary hover:underline">Syarat & Ketentuan</a> kami.
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Quiz Demo Modal -->
+    <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-brand-primary" id="quizModalTitle">Quiz Demo</h3>
+                <button id="closeQuizModal" class="text-gray-500 hover:text-gray-700">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <div id="quizContent">
+                <!-- Quiz content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="text-center">
+                <div class="text-8xl mb-4">🏆</div>
+                <h3 class="text-2xl font-bold text-brand-primary mb-2">Quiz Selesai!</h3>
+                <p class="text-gray-600 mb-6">Hasil akhir skor kamu:</p>
+                
+                <div class="bg-brand-light rounded-xl p-6 mb-6">
+                    <div class="text-4xl font-bold text-brand-primary mb-2" id="finalScore">0</div>
+                    <div class="text-gray-600">Total Poin</div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white border border-brand-light rounded-lg p-3">
+                        <div class="text-2xl font-bold text-green-500" id="correctCount">0</div>
+                        <div class="text-gray-600 text-sm">Jawaban Benar</div>
+                    </div>
+                    <div class="bg-white border border-brand-light rounded-lg p-3">
+                        <div class="text-2xl font-bold text-red-500" id="incorrectCount">0</div>
+                        <div class="text-gray-600 text-sm">Jawaban Salah</div>
+                    </div>
+                </div>
+                
+                <button id="restartQuizBtn" class="btn-primary text-white px-6 py-3 rounded-lg font-bold w-full mb-3">
+                    <span class="material-icons mr-2">replay</span> Coba Lagi
+                </button>
+                
+                <button id="closeResultsModal" class="border border-brand-primary text-brand-primary px-6 py-3 rounded-lg font-bold w-full hover:bg-brand-light transition-colors">
+                    <span class="material-icons mr-2">home</span> Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Initialize AOS animations
-        AOS.init({
-            duration: 800,
-            once: true
+        // ======================
+        // INITIALIZATION
+        // ======================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize AOS animations
+            AOS.init({
+                duration: 800,
+                once: true
+            });
+            
+            // Load quiz data
+            loadQuizCatalog();
+            
+            // Check if user is already logged in
+            checkLoginStatus();
+            
+            // Setup event listeners
+            setupEventListeners();
         });
 
-        // Quiz data
-        const quizQuestions = [
+        // ======================
+        // DATA
+        // ======================
+        
+        // Sample quiz data (in production, this would come from Supabase or API)
+        const quizzes = [
             {
-                question: "Apa ibukota Indonesia?",
-                options: ["Jakarta", "Bandung", "Surabaya", "Medan"],
-                correctAnswer: 0
+                id: 1,
+                title: "OSN IPS SMP - Level Pemula",
+                difficulty: "easy",
+                token_cost: 1,
+                status: "live",
+                questions: [
+                    {
+                        question: "Kebijakan quantitative easing oleh bank sentral terutama bertujuan untuk:",
+                        options: [
+                            "Meningkatkan suku bunga acuan",
+                            "Memperketat persyaratan kredit",
+                            "Meningkatkan likuiditas pasar keuangan",
+                            "Menurunkan nilai tukar mata uang"
+                        ],
+                        correctAnswer: 2,
+                        points: 5
+                    },
+                    {
+                        question: "Pola permukiman linear di daerah pegunungan umumnya dipengaruhi oleh:",
+                        options: [
+                            "Ketersediaan lahan datar",
+                            "Adanya jalur transportasi sungai",
+                            "Topografi lereng yang curam",
+                            "Distribusi sumber daya mineral"
+                        ],
+                        correctAnswer: 2,
+                        points: 5
+                    },
+                    {
+                        question: "Dampak utama Revolusi Industri 4.0 terhadap ketenagakerjaan di Indonesia adalah:",
+                        options: [
+                            "Meningkatnya permintaan tenaga kerja sektor jasa",
+                            "Berkurangnya lapangan kerja rutin yang terotomasi",
+                            "Penurunan kebutuhan keterampilan digital",
+                            "Stabilitas lapangan kerja manufaktur tradisional"
+                        ],
+                        correctAnswer: 1,
+                        points: 5
+                    }
+                ]
             },
             {
-                question: "Berapa jumlah provinsi di Indonesia saat ini?",
-                options: ["34", "32", "38", "36"],
-                correctAnswer: 0
+                id: 2,
+                title: "OSN IPS SMP - Level Menengah",
+                difficulty: "medium",
+                token_cost: 2,
+                status: "live",
+                questions: [
+                    {
+                        question: "Teori pusat-pinggiran (core-periphery) dalam pembangunan wilayah dikemukakan oleh:",
+                        options: [
+                            "Friedmann",
+                            "Weber",
+                            "Christaller",
+                            "Losch"
+                        ],
+                        correctAnswer: 0,
+                        points: 10
+                    },
+                    {
+                        question: "Faktor utama yang memicu krisis moneter 1998 di Indonesia adalah:",
+                        options: [
+                            "Defisit fiskal yang besar",
+                            "Tingginya utang swasta dalam valas",
+                            "Kebijakan moneter yang terlalu ketat",
+                            "Penurunan ekspor migas"
+                        ],
+                        correctAnswer: 1,
+                        points: 10
+                    }
+                ]
             },
             {
-                question: "Siapa presiden pertama Indonesia?",
-                options: ["Soekarno", "Soeharto", "Joko Widodo", "BJ Habibie"],
-                correctAnswer: 0
+                id: 3,
+                title: "OSN IPS SMP - Level Expert",
+                difficulty: "hard",
+                token_cost: 3,
+                status: "live",
+                questions: [
+                    {
+                        question: "Indikator utama dalam menghitung Indeks Pembangunan Manusia (IPM) adalah:",
+                        options: [
+                            "Angka harapan hidup, pendidikan, pendapatan",
+                            "Tingkat urbanisasi, Gini ratio, PDB",
+                            "Konsumsi energi, melek huruf, inflasi",
+                            "Produktivitas tenaga kerja, ekspor, investasi"
+                        ],
+                        correctAnswer: 0,
+                        points: 15
+                    }
+                ]
             },
             {
-                question: "Apa lambang negara Indonesia?",
-                options: ["Garuda Pancasila", "Komodo", "Wayang", "Banteng"],
-                correctAnswer: 0
+                id: 4,
+                title: "Sejarah Indonesia Modern",
+                difficulty: "medium",
+                token_cost: 2,
+                status: "comingsoon"
             },
             {
-                question: "Tanggal berapa Indonesia merdeka?",
-                options: ["17 Agustus 1945", "27 Desember 1949", "1 Juni 1945", "28 Oktober 1928"],
-                correctAnswer: 0
+                id: 5,
+                title: "Ekonomi Makro Lanjutan",
+                difficulty: "hard",
+                token_cost: 3,
+                status: "comingsoon"
+            },
+            {
+                id: 6,
+                title: "Geografi Regional",
+                difficulty: "expert",
+                token_cost: 5,
+                status: "comingsoon"
             }
         ];
-
-        // Default users if users.json is not available
-        const defaultUsers = [
-            "siswa1", "siswa2", "siswa3", "guru1", "guru2", "admin", "pengguna", "anonim"
+        
+        // Sample users data (in production, use Supabase auth)
+        const users = [
+            { username: "zam123", tokens: 10 },
+            { username: "olimpiade", tokens: 5 },
+            { username: "quizlover", tokens: 8 }
         ];
-
-        // App state
+        
+        // Current user state
         let currentUser = null;
+        let currentQuiz = null;
         let currentQuestionIndex = 0;
-        let userAnswers = [];
-        let quizScore = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
 
-        // DOM elements
-        const loginButton = document.getElementById('loginButton');
+        // ======================
+        // DOM ELEMENTS
+        // ======================
+        const loginBtn = document.getElementById('loginBtn');
+        const tokenDisplay = document.getElementById('tokenDisplay');
+        const tokenCount = document.getElementById('tokenCount');
         const loginModal = document.getElementById('loginModal');
+        const closeLoginModal = document.getElementById('closeLoginModal');
         const loginForm = document.getElementById('loginForm');
         const usernameInput = document.getElementById('username');
-        const randomUserBtn = document.getElementById('randomUserBtn');
-        
-        const lobbyScreen = document.getElementById('lobbyScreen');
-        const quizScreen = document.getElementById('quizScreen');
-        const resultsScreen = document.getElementById('resultsScreen');
-        
+        const quizModal = document.getElementById('quizModal');
+        const closeQuizModal = document.getElementById('closeQuizModal');
+        const quizModalTitle = document.getElementById('quizModalTitle');
+        const quizContent = document.getElementById('quizContent');
+        const resultsModal = document.getElementById('resultsModal');
+        const finalScore = document.getElementById('finalScore');
+        const correctCount = document.getElementById('correctCount');
+        const incorrectCount = document.getElementById('incorrectCount');
+        const restartQuizBtn = document.getElementById('restartQuizBtn');
+        const closeResultsModal = document.getElementById('closeResultsModal');
         const startQuizBtn = document.getElementById('startQuizBtn');
-        const progressBar = document.getElementById('progressBar');
+        const viewQuizzesBtn = document.getElementById('viewQuizzesBtn');
+        const finalCtaBtn = document.getElementById('finalCtaBtn');
+
+        // ======================
+        // FUNCTIONS
+        // ======================
         
-        const questionText = document.getElementById('questionText');
-        const optionsContainer = document.getElementById('optionsContainer');
-        const questionCounter = document.getElementById('questionCounter');
-        const quizProgressBar = document.getElementById('quizProgressBar');
-        const prevQuestionBtn = document.getElementById('prevQuestionBtn');
-        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
-        const skipQuestionBtn = document.getElementById('skipQuestionBtn');
-        
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const correctAnswers = document.getElementById('correctAnswers');
-        const totalQuestions = document.getElementById('totalQuestions');
-        const resultMessage = document.getElementById('resultMessage');
-        const retryQuizBtn = document.getElementById('retryQuizBtn');
-        const backToLobbyBtn = document.getElementById('backToLobbyBtn');
-
-        // Event Listeners
-        loginButton.addEventListener('click', () => {
-            const modal = new Flowbite.Modal(loginModal);
-            modal.show();
-        });
-
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = usernameInput.value.trim();
-            handleLogin(username);
-        });
-
-        randomUserBtn.addEventListener('click', () => {
-            const randomUser = defaultUsers[Math.floor(Math.random() * defaultUsers.length)];
-            usernameInput.value = randomUser;
-        });
-
-        startQuizBtn.addEventListener('click', startQuiz);
-        prevQuestionBtn.addEventListener('click', goToPreviousQuestion);
-        nextQuestionBtn.addEventListener('click', goToNextQuestion);
-        skipQuestionBtn.addEventListener('click', skipQuestion);
-        retryQuizBtn.addEventListener('click', startQuiz);
-        backToLobbyBtn.addEventListener('click', backToLobby);
-
-        // Functions
-        function handleLogin(username) {
-            // Try to load users from users.json first
-            fetch('users.json')
-                .then(response => {
-                    if (response.ok) return response.json();
-                    throw new Error('users.json not found');
-                })
-                .then(users => {
-                    if (users.includes(username)) {
-                        loginSuccess(username);
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Username tidak valid',
-                            text: 'Username tidak ditemukan di daftar pengguna yang diizinkan.',
-                        });
-                    }
-                })
-                .catch(error => {
-                    // Fallback to default users if users.json doesn't exist
-                    if (defaultUsers.includes(username)) {
-                        loginSuccess(username);
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Username tidak valid',
-                            text: 'Gunakan salah satu username default atau buat file users.json dengan daftar username yang diizinkan.',
-                        });
-                    }
-                });
+        function setupEventListeners() {
+            // Login button
+            loginBtn.addEventListener('click', toggleLoginModal);
+            closeLoginModal.addEventListener('click', toggleLoginModal);
+            
+            // Login form
+            loginForm.addEventListener('submit', handleLogin);
+            
+            // Quiz modal
+            closeQuizModal.addEventListener('click', closeQuiz);
+            
+            // Results modal
+            restartQuizBtn.addEventListener('click', restartQuiz);
+            closeResultsModal.addEventListener('click', closeResults);
+            
+            // CTA buttons
+            startQuizBtn.addEventListener('click', () => {
+                if (currentUser) {
+                    startRandomQuiz();
+                } else {
+                    toggleLoginModal();
+                }
+            });
+            
+            viewQuizzesBtn.addEventListener('click', () => {
+                document.getElementById('quizCatalog').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            finalCtaBtn.addEventListener('click', () => {
+                if (currentUser) {
+                    startRandomQuiz();
+                } else {
+                    toggleLoginModal();
+                }
+            });
         }
-
-        function loginSuccess(username) {
-            currentUser = username;
-            localStorage.setItem('currentUser', username);
+        
+        function loadQuizCatalog() {
+            const quizCatalog = document.querySelector('#quizCatalog .grid');
+            quizCatalog.innerHTML = '';
             
-            const modal = Flowbite.Modal.getInstance(loginModal);
-            modal.hide();
+            quizzes.forEach(quiz => {
+                const difficultyColors = {
+                    easy: 'bg-difficulty-easy',
+                    medium: 'bg-difficulty-medium',
+                    hard: 'bg-difficulty-hard',
+                    expert: 'bg-difficulty-expert'
+                };
+                
+                const cardClass = quiz.status === 'comingsoon' ? 'blur-card' : 'quiz-card hover:shadow-lg transition-all cursor-pointer';
+                
+                const card = document.createElement('div');
+                card.className = `${cardClass} bg-white rounded-xl shadow-md overflow-hidden border border-brand-light`;
+                card.dataset.id = quiz.id;
+                card.dataset.status = quiz.status;
+                
+                card.innerHTML = `
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold">${quiz.title}</h3>
+                            <span class="${difficultyColors[quiz.difficulty]} text-white text-xs px-2 py-1 rounded-full">
+                                ${quiz.difficulty.toUpperCase()}
+                            </span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <span class="material-icons text-yellow-500 text-sm mr-1">bolt</span>
+                                <span class="text-sm">${quiz.token_cost} Token</span>
+                            </div>
+                            
+                            ${quiz.status === 'live' ? 
+                                `<button class="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors start-quiz">
+                                    Kerjakan
+                                </button>` : 
+                                `<span class="text-sm text-gray-500">Coming Soon</span>`
+                            }
+                        </div>
+                    </div>
+                `;
+                
+                if (quiz.status === 'live') {
+                    card.querySelector('.start-quiz').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        startQuiz(quiz.id);
+                    });
+                }
+                
+                quizCatalog.appendChild(card);
+            });
+        }
+        
+        function checkLoginStatus() {
+            const savedUser = localStorage.getItem('wg_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUserUI();
+            }
+        }
+        
+        function toggleLoginModal() {
+            loginModal.classList.toggle('hidden');
+        }
+        
+        function handleLogin(e) {
+            e.preventDefault();
             
-            loginButton.textContent = username;
+            const username = usernameInput.value.trim();
+            
+            if (!username) {
+                Swal.fire({
+                    title: 'Username kosong',
+                    text: 'Silakan masukkan username untuk melanjutkan',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            // In production, this would be a Supabase auth call
+            // Example Supabase code (commented out):
+            /*
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .single();
+            
+            if (error || !data) {
+                // Create new user
+                const { data: newUser, error: createError } = await supabase
+                    .from('users')
+                    .insert([{ username, tokens: 5 }])
+                    .select()
+                    .single();
+                
+                if (createError) {
+                    showError('Gagal membuat akun baru');
+                    return;
+                }
+                
+                currentUser = newUser;
+            } else {
+                currentUser = data;
+            }
+            */
+            
+            // Demo fallback - check local users array
+            let user = users.find(u => u.username === username);
+            
+            if (!user) {
+                // Create new user with random tokens
+                user = {
+                    username,
+                    tokens: Math.floor(Math.random() * 5) + 3 // 3-7 tokens
+                };
+                users.push(user);
+            }
+            
+            currentUser = user;
+            localStorage.setItem('wg_user', JSON.stringify(currentUser));
+            
+            // Update UI
+            updateUserUI();
+            
+            // Close modal and show welcome message
+            toggleLoginModal();
             
             Swal.fire({
-                position: 'top-end',
-                icon: 'success',
                 title: `Selamat datang, ${username}!`,
-                showConfirmButton: false,
-                timer: 1500
+                text: `Kamu punya ${currentUser.tokens} token untuk mengerjakan quiz.`,
+                icon: 'success',
+                confirmButtonText: 'Mulai Quiz'
             });
-            
-            // Update progress (example: 30% for logged in users)
-            progressBar.style.width = '30%';
         }
-
-        function startQuiz() {
-            // Reset quiz state
+        
+        function updateUserUI() {
+            if (currentUser) {
+                loginBtn.textContent = currentUser.username;
+                tokenDisplay.classList.remove('hidden');
+                tokenCount.textContent = currentUser.tokens;
+            } else {
+                loginBtn.textContent = 'Masuk';
+                tokenDisplay.classList.add('hidden');
+            }
+        }
+        
+        function startQuiz(quizId) {
+            if (!currentUser) {
+                toggleLoginModal();
+                return;
+            }
+            
+            const quiz = quizzes.find(q => q.id === quizId);
+            
+            if (!quiz) {
+                Swal.fire({
+                    title: 'Quiz tidak ditemukan',
+                    text: 'Silakan pilih quiz yang tersedia',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            // Check token balance
+            if (currentUser.tokens < quiz.token_cost) {
+                Swal.fire({
+                    title: 'Token tidak cukup',
+                    text: `Kamu membutuhkan ${quiz.token_cost} token untuk mengerjakan quiz ini.`,
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            // Deduct tokens (in production, this would be a Supabase transaction)
+            currentUser.tokens -= quiz.token_cost;
+            localStorage.setItem('wg_user', JSON.stringify(currentUser));
+            updateUserUI();
+            
+            // Start quiz
+            currentQuiz = quiz;
             currentQuestionIndex = 0;
-            userAnswers = Array(quizQuestions.length).fill(null);
-            quizScore = 0;
+            score = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
             
-            // Show quiz screen
-            lobbyScreen.classList.add('hidden');
-            resultsScreen.classList.add('hidden');
-            quizScreen.classList.remove('hidden');
-            
-            // Load first question
-            loadQuestion(currentQuestionIndex);
+            showQuestion();
+            quizModalTitle.textContent = quiz.title;
+            quizModal.classList.remove('hidden');
         }
-
-        function loadQuestion(index) {
-            if (index < 0 || index >= quizQuestions.length) return;
-            
-            const question = quizQuestions[index];
-            questionText.textContent = question.question;
-            
-            // Update question counter
-            questionCounter.textContent = `${index + 1}/${quizQuestions.length}`;
-            
-            // Update progress bar
-            const progressPercent = ((index + 1) / quizQuestions.length) * 100;
-            quizProgressBar.style.width = `${progressPercent}%`;
-            
-            // Clear previous options
-            optionsContainer.innerHTML = '';
-            
-            // Add new options
-            question.options.forEach((option, i) => {
-                const optionElement = document.createElement('button');
-                optionElement.className = `quiz-option p-4 border rounded-lg text-left transition duration-200 ${
-                    userAnswers[index] === i ? 'bg-primary text-white' : 'bg-white hover:bg-secondary'
-                }`;
-                optionElement.textContent = option;
-                optionElement.addEventListener('click', () => selectAnswer(i));
-                optionsContainer.appendChild(optionElement);
-            });
-            
-            // Update navigation buttons
-            prevQuestionBtn.disabled = index === 0;
-            nextQuestionBtn.textContent = index === quizQuestions.length - 1 ? 'Selesai' : 'Selanjutnya';
-        }
-
-        function selectAnswer(optionIndex) {
-            userAnswers[currentQuestionIndex] = optionIndex;
-            
-            // Highlight selected option
-            const options = optionsContainer.querySelectorAll('.quiz-option');
-            options.forEach((option, i) => {
-                option.className = `quiz-option p-4 border rounded-lg text-left transition duration-200 ${
-                    userAnswers[currentQuestionIndex] === i ? 'bg-primary text-white' : 'bg-white hover:bg-secondary'
-                }`;
-            });
-            
-            // Check if answer is correct
-            const currentQuestion = quizQuestions[currentQuestionIndex];
-            if (optionIndex === currentQuestion.correctAnswer) {
-                // Show feedback for correct answer
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 1500,
-                    timerProgressBar: true,
-                    didOpen: (toast) => {
-                        toast.onmouseenter = Swal.stopTimer;
-                        toast.onmouseleave = Swal.resumeTimer;
-                    }
-                });
-                Toast.fire({
-                    icon: 'success',
-                    title: 'Jawaban benar!'
+        
+        function startRandomQuiz() {
+            const availableQuizzes = quizzes.filter(q => q.status === 'live');
+            if (availableQuizzes.length > 0) {
+                const randomQuiz = availableQuizzes[Math.floor(Math.random() * availableQuizzes.length)];
+                startQuiz(randomQuiz.id);
+            } else {
+                Swal.fire({
+                    title: 'Tidak ada quiz tersedia',
+                    text: 'Silakan coba lagi nanti',
+                    icon: 'info',
+                    confirmButtonText: 'OK'
                 });
             }
         }
-
-        function goToPreviousQuestion() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                loadQuestion(currentQuestionIndex);
-            }
+        
+        function showQuestion() {
+            const question = currentQuiz.questions[currentQuestionIndex];
+            
+            quizContent.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold">Pertanyaan ${currentQuestionIndex + 1}/${currentQuiz.questions.length}</h3>
+                        <span class="bg-brand-primary text-white px-2 py-1 rounded-full text-xs font-semibold">
+                            ${question.points} Poin
+                        </span>
+                    </div>
+                    
+                    <p class="text-lg mb-6">${question.question}</p>
+                    
+                    <div class="space-y-3">
+                        ${question.options.map((option, index) => `
+                            <button onclick="selectAnswer(${index})" 
+                                    class="w-full text-left p-4 rounded-lg border border-gray-300 hover:border-brand-primary hover:bg-brand-light transition-all">
+                                <span class="font-bold text-brand-primary">${String.fromCharCode(65 + index)}.</span> ${option}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center mt-6">
+                    <div class="text-sm text-gray-600">
+                        Poin saat ini: <span class="font-bold">${score}</span>
+                    </div>
+                    
+                    <div class="text-sm text-gray-600">
+                        Token tersisa: <span class="font-bold">${currentUser.tokens}</span>
+                    </div>
+                </div>
+            `;
         }
-
-        function goToNextQuestion() {
-            // Save answer if not skipped
-            if (userAnswers[currentQuestionIndex] !== null) {
-                const currentQuestion = quizQuestions[currentQuestionIndex];
-                if (userAnswers[currentQuestionIndex] === currentQuestion.correctAnswer) {
-                    quizScore++;
-                }
+        
+        function selectAnswer(selectedIndex) {
+            const question = currentQuiz.questions[currentQuestionIndex];
+            const optionButtons = quizContent.querySelectorAll('button');
+            
+            // Disable all buttons
+            optionButtons.forEach(btn => btn.disabled = true);
+            
+            // Mark correct answer
+            optionButtons[question.correctAnswer].classList.add('bg-green-100', 'border-green-500', 'correct-answer');
+            
+            if (selectedIndex === question.correctAnswer) {
+                // Correct answer
+                score += question.points;
+                correctAnswers++;
+                
+                // Confetti effect for correct answer
+                createConfetti();
+            } else {
+                // Wrong answer
+                optionButtons[selectedIndex].classList.add('bg-red-100', 'border-red-500', 'incorrect-shake');
+                incorrectAnswers++;
             }
             
-            if (currentQuestionIndex < quizQuestions.length - 1) {
+            // Move to next question or show results
+            setTimeout(() => {
                 currentQuestionIndex++;
-                loadQuestion(currentQuestionIndex);
-            } else {
-                showResults();
-            }
+                
+                if (currentQuestionIndex < currentQuiz.questions.length) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
         }
-
-        function skipQuestion() {
-            userAnswers[currentQuestionIndex] = null;
-            goToNextQuestion();
-        }
-
+        
         function showResults() {
-            // Calculate score
-            const percentage = Math.round((quizScore / quizQuestions.length) * 100);
+            // Update results modal
+            finalScore.textContent = score;
+            correctCount.textContent = correctAnswers;
+            incorrectCount.textContent = incorrectAnswers;
             
-            // Update results display
-            scoreDisplay.textContent = `${percentage}%`;
-            correctAnswers.textContent = quizScore;
-            totalQuestions.textContent = quizQuestions.length;
+            // Close quiz modal and show results
+            quizModal.classList.add('hidden');
+            resultsModal.classList.remove('hidden');
             
-            // Set result message based on score
-            let message = '';
-            if (percentage >= 80) {
-                message = 'Kerja bagus! Kamu menguasai materi ini dengan baik.';
-            } else if (percentage >= 50) {
-                message = 'Hasil yang cukup baik, tapi masih ada ruang untuk perbaikan.';
-            } else {
-                message = 'Jangan menyerah! Pelajari lagi materinya dan coba lagi.';
+            // In production, save results to Supabase leaderboard
+            /*
+            const { error } = await supabase
+                .from('leaderboard')
+                .insert([{
+                    user_id: currentUser.id,
+                    quiz_id: currentQuiz.id,
+                    score: score,
+                    percent: Math.round((correctAnswers / currentQuiz.questions.length) * 100)
+                }]);
+            
+            if (error) {
+                console.error('Error saving to leaderboard:', error);
             }
-            resultMessage.textContent = message;
-            
-            // Show results screen
-            quizScreen.classList.add('hidden');
-            resultsScreen.classList.remove('hidden');
-            
-            // Update progress (example: 60% after completing quiz)
-            progressBar.style.width = '60%';
+            */
+        }
+        
+        function closeQuiz() {
+            quizModal.classList.add('hidden');
+        }
+        
+        function restartQuiz() {
+            resultsModal.classList.add('hidden');
+            startQuiz(currentQuiz.id);
+        }
+        
+        function closeResults() {
+            resultsModal.classList.add('hidden');
+        }
+        
+        function createConfetti() {
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = ['#FF6B00', '#F4C425', '#4A90E2', '#10B981'][Math.floor(Math.random() * 4)];
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 2000);
+                }, i * 100);
+            }
         }
 
-        function backToLobby() {
-            resultsScreen.classList.add('hidden');
-            lobbyScreen.classList.remove('hidden');
-        }
-
-        // Check for saved user on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                loginButton.textContent = savedUser;
-                progressBar.style.width = '30%';
-            }
-        });
+        // Expose functions to global scope for HTML onclick
+        window.selectAnswer = selectAnswer;
     </script>
 </body>
 </html>
